@@ -27,7 +27,7 @@ dbr_hdl = dbr.dbrCreate(dbr_name, level, group_list)
 
 test_in = "Hello World!"
 group = '0'
-res = dbr.dbrPut(dbr_hdl, test_in, "testTup", group)
+res = dbr.dbrPut(dbr_hdl, test_in, len(test_in), "testTup", group)
 print 'Put ' + test_in
 out_size = ffi.new('int64_t*')
 out_size[0] = 1024

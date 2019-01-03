@@ -15,7 +15,7 @@
  #
 import os
 import sys
-
+import ctypes
 from _dbr_interface import ffi
 from dbr_module import dbr
 
@@ -32,15 +32,16 @@ dbr_state = ffi.new('DBR_State_t*')
 res = dbr.dbrQuery(dbr_hdl, dbr_state, dbr.DBR_STATE_MASK_ALL)
 
 test_in = "Hello World!"
-res = dbr.dbrPut(dbr_hdl, test_in, "testTup", group)
-res = dbr.dbrPut(dbr_hdl, "Goodbye", "testTup", group)
+res = dbr.dbrPut(dbr_hdl, test_in, len(test_in), "testTup", group)
+res = dbr.dbrPut(dbr_hdl, "Goodbye", len("Goodbye"), "testTup", group)
 
 print 'Put ' + test_in + ' and Goodbye' 
 out_size = ffi.new('int64_t*')
 out_size[0] = 1024
+
 q = dbr.createBuf('char[]', out_size[0])
-group_t = 0
 res = dbr.dbrRead(dbr_hdl, q, out_size, "testTup", "", group, dbr.DBR_FLAGS_NOWAIT)
+
 print 'Read returned: ' +  q[:]
 res = dbr.dbrGet(dbr_hdl, q, out_size, "testTup", "", group, dbr.DBR_FLAGS_NONE)
 print 'Get returned: ' + q[:]

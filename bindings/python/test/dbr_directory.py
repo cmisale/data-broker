@@ -32,8 +32,8 @@ dbr_state = ffi.new('DBR_State_t*')
 res = dbr.dbrQuery(dbr_hdl, dbr_state, dbr.DBR_STATE_MASK_ALL)
 
 test_in = "Hello World!"
-res = dbr.dbrPut(dbr_hdl, test_in, "HelloTuple", group)
-res = dbr.dbrPut(dbr_hdl, "Goodbye World!", "GoodbyeTuple", group)
+res = dbr.dbrPut(dbr_hdl, test_in, len(test_in), "HelloTuple", group)
+res = dbr.dbrPut(dbr_hdl, "Goodbye World!", len("Goodbye World!"), "GoodbyeTuple", group)
 
 ######
 #test the directory command and list all tuple names/keys

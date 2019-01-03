@@ -33,7 +33,7 @@ res = dbr.dbrQuery(dbr_hdl, dbr_state, dbr.DBR_STATE_MASK_ALL)
 
 
 test_in = "Hello World!"
-res = dbr.dbrPutA(dbr_hdl, test_in, "testTup", group)
+res = dbr.dbrPutA(dbr_hdl, test_in, len(test_in), "testTup", group)
 
 print 'Async Put tuple: ' + test_in
 out_size = ffi.new('int64_t*')

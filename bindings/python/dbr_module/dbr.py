@@ -19,7 +19,7 @@ libbackend = ffi.dlopen("libdbbe_redis.so", ffi.RTLD_GLOBAL|ffi.RTLD_NOW)
 libdatabroker = ffi.dlopen("libdatabroker.so")
 import _cffi_backend
 from dbr_module.dbr_errorcodes import Errors
-
+import numpy as np
 
 ERRORTABLE = Errors()
 
@@ -65,6 +65,17 @@ DBR_GROUP_LIST_EMPTY = libdatabroker.DBR_GROUP_LIST_EMPTY
 # Mask
 DBR_STATE_MASK_ALL = libdatabroker.DBR_STATE_MASK_ALL
 
+def numpy2cffi(ctype, np_arr):
+    cffi_arr = ffi.cast(ctype, np_arr.ctypes.data)
+    buffer_size = np_arr.size*np_arr.dtype.itemsize
+    return cffi_arr, buffer_size
+
+def cffi2numpy(ctype, dbrbuffer, buffer_size, np_dtype):
+    cffi_arr = ffi.cast(ctype, ffi.from_buffer(dbrbuffer))
+    c_buffer = ffi.buffer(cffi_arr, buffer_size)
+    np_arr = np.frombuffer(c_buffer, dtype=np_dtype)
+    return np_arr
+
 def getErrorCode(error_code):
     return ERRORTABLE.getErrorCode(error_code)
 
@@ -72,7 +83,6 @@ def getErrorMessage(error_code):
     if error_code < DBR_ERR_MAXERROR:
     	return ERRORTABLE.getErrorMessage(error_code)
     return "Unknown Error"
-
 
 def createBuf(buftype, bufsize):
     retval = ffi.buffer(ffi.new(buftype, bufsize))
@@ -106,8 +116,8 @@ def dbrRemoveUnits(dbr_handle, units):
     retval = libdatabroker.dbrRemoveUnits(dbr_handle, units)
     return retval
 
-def dbrPut(dbr_hdl, tuple_val, tuple_name, group):
-    retval = libdatabroker.dbrPut(dbr_hdl, tuple_val, len(tuple_val), tuple_name, group)
+def dbrPut(dbr_hdl, tuple_val, length, tuple_name, group):
+    retval = libdatabroker.dbrPut(dbr_hdl, tuple_val, length, tuple_name, group)
     return retval
 
 def dbrRead(dbr_hdl, out_buffer, buffer_size, tuple_name, match_template, group, flag):
@@ -122,8 +132,8 @@ def dbrReadA(dbr_hdl, out_buffer, buffer_size, tuple_name, match_template, group
     tag = libdatabroker.dbrReadA(dbr_hdl, ffi.from_buffer(out_buffer), buffer_size, tuple_name,  match_template, group)
     return tag
 
-def dbrPutA(dbr_hdl, tuple_val, tuple_name, group):
-    tag = libdatabroker.dbrPutA(dbr_hdl, tuple_val, len(tuple_val), tuple_name, group)
+def dbrPutA(dbr_hdl, tuple_val, length, tuple_name, group):
+    tag = libdatabroker.dbrPutA(dbr_hdl, tuple_val, length, tuple_name, group)
     return tag
 
 def dbrGetA(dbr_hdl, out_buffer, buffer_size, tuple_name, match_template, group):
@@ -157,6 +167,6 @@ def dbrCancel(tag):
     retval = libdatabroker.dbrCancel(tag)
     return retval
 
-def dbrEval(dbr_hdl, tuple_val, tuple_name, group, fn_ptr):
-    retval = libdatabroker.dbrEval(dbr_hdl, tuple_val, len(tuple_val), tuple_name, group, fn_ptr)
+def dbrEval(dbr_hdl, tuple_val, length, tuple_name, group, fn_ptr):
+    retval = libdatabroker.dbrEval(dbr_hdl, tuple_val, length, tuple_name, group, fn_ptr)
     return retval
