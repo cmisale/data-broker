@@ -74,7 +74,11 @@ def getErrorCode(error_code):
 
 def getErrorMessage(error_code):
     if error_code < DBR_ERR_MAXERROR:
+<<<<<<< HEAD
         return ERRORTABLE.getErrorMessage(error_code).decode()
+=======
+    	return ERRORTABLE.getErrorMessage(error_code).decode()
+>>>>>>> 04180af5bf679eee9f68ce2a8db26d1a7b69198d
     return "Unknown Error"
 
 def createBuf(buftype, bufsize):
