@@ -62,6 +62,7 @@ DBR_FLAGS_MAX = libdatabroker.DBR_FLAGS_MAX
 
 DBR_GROUP_LIST_EMPTY = '0' #libdatabroker.DBR_GROUP_LIST_EMPTY
 DBR_GROUP_EMPTY = '0'      #libdatabroker.DBR_GROUP_EMPTY
+DBR_GROUP_LOCAL = '0x70CA7600F' #libdatabroker.DBR_GROUP_LOCAL #define DBR_GROUP_LOCAL ( (DBR_Group_t)0x70CA7600F )
 
 # Mask
 DBR_STATE_MASK_ALL = libdatabroker.DBR_STATE_MASK_ALL

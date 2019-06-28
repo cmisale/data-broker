@@ -25,15 +25,15 @@ level = dbr.DBR_PERST_VOLATILE_SIMPLE
 group_list = ffi.new('DBR_GroupList_t')
 dbr_hdl = ffi.new('DBR_Handle_t*')
 dbr_hdl = dbr.create(dbr_name, level, group_list)
-group = dbr.DBR_GROUP_EMPTY
+group = dbr.DBR_GROUP_LOCAL
 
 # query the DBR to see if successful
 dbr_state = ffi.new('DBR_State_t*')
 ret = dbr.query(dbr_hdl, dbr_state, dbr.DBR_STATE_MASK_ALL)
 
 test_in = "Hello World!"
-ret = dbr.put(dbr_hdl, test_in, "HelloTuple", group)
-ret = dbr.put(dbr_hdl, "Goodbye World!", "GoodbyeTuple", group)
+ret = dbr.put(dbr_hdl, test_in, "HelloTuple", dbr.DBR_GROUP_EMPTY)
+ret = dbr.put(dbr_hdl, "Goodbye World!", "GoodbyeTuple", dbr.DBR_GROUP_EMPTY)
 
 ######
 #test the directory command and list all tuple names/keys

@@ -33,8 +33,6 @@ libdatabroker =    r""" // passed to the real C compiler,
 ffibuilder.set_source("_dbr_interface",None,
     libdatabroker,
     libraries=["databroker", "databroker_int", "dbbe_redis", "dbbe_transport"],)
-    #ibrary_dirs=[os.path.dirname(__file__),],)
-#    include_dirs=["../../../include/"])
 ffibuilder.cdef("""
 
 #define DBR_MAX_KEY_LEN 1023
@@ -42,6 +40,7 @@ ffibuilder.cdef("""
 #define DBR_GROUP_EMPTY 0
 #define DBR_UNIT_LIST_EMPTY 0 
 #define DBR_STATE_MASK_ALL  0xFFFFFFFFFFFFFFFFull
+#define DBR_GROUP_LOCAL 0x70CA7600F
 
 typedef enum {
   DBR_PERST_VOLATILE_SIMPLE,
