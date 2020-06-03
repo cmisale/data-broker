@@ -46,7 +46,7 @@ void PrintParallelResultLine( dbr::config *cfg,
   int np = 0;
   MPI_Comm_size( comm, &np );
   MPI_Comm_rank( comm, &pid );
-
+  
   double total_req = np * ( cfg->_iterations - cfg->_inflight - cfg->_inflight );
   double total_time = 0.0;
   MPI_Allreduce( &actual_time, &total_time, 1, MPI_DOUBLE, MPI_SUM, comm );
@@ -143,10 +143,34 @@ int main( int argc, char **argv )
     std::cerr << "Failed to create namespace" << std::endl;
     exit( -1 );
   }
-
-
-  // populate backend with data
   double put_actual_time = 0.0;
+  double get_actual_time = 0.0;
+  bool first = true;
+// putget pipeline-like example
+  if( config->_testcase & dbr::TEST_CASE_PUTGET )
+  {
+    int writers = np/2;
+    if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
+    if (pid <= writers) {
+	if(first) {
+	   std::cout << "I am pid " << pid << " performing PUT" << std::endl;
+	   std::flush(std::cout); 
+	   first = false;	
+	}
+       put_actual_time = dbr::benchmark(config, dbr::TEST_CASE_PUT, put_res, reqd, h, data );
+    } else {
+	if(first) {
+           std::cout << "I am pid " << pid << " performing GET" << std::endl;
+           std::flush(std::cout);
+           first = false;
+        }
+       get_actual_time = dbr::benchmark(config, dbr::TEST_CASE_GET, get_res, reqd, h, data );
+    }
+  }
+  if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
+ 
+	
+  // populate backend with data
   if( config->_testcase & dbr::TEST_CASE_PUT )
   {
     if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
@@ -174,7 +198,7 @@ int main( int argc, char **argv )
   MPI_Barrier(comm);
 
   // cleanup any generated data
-  double get_actual_time = 0.0;
+  //double get_actual_time = 0.0;
   if( config->_testcase & dbr::TEST_CASE_GET )
   {
     std::cout << "."; std::flush( std::cout );
