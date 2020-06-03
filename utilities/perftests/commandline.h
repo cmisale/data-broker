@@ -45,7 +45,8 @@ enum TEST_CASE
   TEST_CASE_PUT = 0x1,
   TEST_CASE_GET = 0x2,
   TEST_CASE_READ = 0x4,
-  TEST_CASE_MAX = 0x8
+  TEST_CASE_PUTGET = 0x8,
+  TEST_CASE_MAX = 0x16
 };
 
 static inline int
@@ -58,6 +59,8 @@ test_case_to_int( const char *test )
     testcase += TEST_CASE_GET;
   if( strstr( test, "READ" ) != NULL )
     testcase += TEST_CASE_READ;
+  if( strstr( test, "PUTGET" ) != NULL )
+    testcase += TEST_CASE_PUTGET;
   return testcase;
 }
 
@@ -74,7 +77,7 @@ int extraParse( const int opt, dbr::config *cfg )
       cfg->_testcase = test_case_to_int( optarg );
       if( cfg->_testcase == -1 )
       {
-        std::cerr << "Unknown test case (available: PUT, GET, READ)" << std::endl;
+        std::cerr << "Unknown test case (available: PUT, GET, READ, PUTGET (pipelining)" << std::endl;
         exit(1);
       }
       break;

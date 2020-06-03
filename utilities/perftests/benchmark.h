@@ -66,6 +66,11 @@ double benchmark( config *config,
         retsize[n % config->_inflight ] = config->_datasize;
         reqd->_tags[n] = dbrReadA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
         break;
+//      case dbr::TEST_CASE_PUTGET:
+//	reqd->_tags[n] = dbrPutA( h, data, config->_datasize, reqd->_names[n], DBR_GROUP_EMPTY );
+//	retsize[n % config->_inflight ] = config->_datasize;
+//      reqd->_tags[n] = dbrGetA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
+//       break;
       default:
         std::cerr << "Undefined test case: " << testcase << std::endl;
         exit(1);
@@ -109,6 +114,11 @@ double benchmark( config *config,
         retsize[n % config->_inflight ] = config->_datasize;
         reqd->_tags[n] = dbrReadA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
         break;
+  //    case dbr::TEST_CASE_PUTGET:
+//	reqd->_tags[n] = dbrPutA( h, data, config->_datasize, reqd->_names[n], DBR_GROUP_EMPTY );
+//	retsize[n % config->_inflight ] = config->_datasize;
+//        reqd->_tags[n] = dbrGetA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
+//        break;
       default:
         std::cerr << "Undefined test case: " << testcase << std::endl;
         exit(1);
