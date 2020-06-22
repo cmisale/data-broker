@@ -42,6 +42,7 @@ if( MPI_FOUND )
   set(DB_USER_CC_TEST_SOURCES
     parallel.cc
     long_random_parallel.cc
+    pipeline.cc
   )
 
   foreach(_test ${DB_USER_CC_TEST_SOURCES})

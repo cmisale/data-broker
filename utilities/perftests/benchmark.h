@@ -46,12 +46,12 @@ double benchmark( config *config,
 
   char *base_data = strdup( data );
   bool validation_needed = ( config->_validate &&( testcase & dbr::TEST_CASE_PUT ));
-
+  // std::cout << "WARMUP: Creating: " << config->_inflight << " requests for " << testcase << std::endl;
   // warmup
   for( n=0; n<config->_inflight; ++n )
   {
 //    std::cout << "Creating: " << n << ":" << reqd->_names[n] << std::endl;
-    resd->_latency[n] = -dbr::myTime();
+    resd->_latency[n] = 0;//-dbr::myTime();
 
     switch( testcase )
     {
@@ -62,15 +62,15 @@ double benchmark( config *config,
         retsize[n % config->_inflight ] = config->_datasize;
         reqd->_tags[n] = dbrGetA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
         break;
+      case dbr::TEST_CASE_GETB:
+        retsize[n % config->_inflight ] = config->_datasize;
+        reqd->_tags[n] = dbrGet( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
+         //resd->_latency[ n ] += dbr::myTime();
+        break;
       case dbr::TEST_CASE_READ:
         retsize[n % config->_inflight ] = config->_datasize;
         reqd->_tags[n] = dbrReadA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
         break;
-//      case dbr::TEST_CASE_PUTGET:
-//	reqd->_tags[n] = dbrPutA( h, data, config->_datasize, reqd->_names[n], DBR_GROUP_EMPTY );
-//	retsize[n % config->_inflight ] = config->_datasize;
-//      reqd->_tags[n] = dbrGetA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
-//       break;
       default:
         std::cerr << "Undefined test case: " << testcase << std::endl;
         exit(1);
@@ -86,21 +86,23 @@ double benchmark( config *config,
   // measuring phase
   double start = dbr::myTime();
   //  std::cout << "StartStamp: " << start << std::endl;
-
+ //std::cout << "MEASURING: Creating: " << config->_iterations << " requests for " << testcase << std::endl;
   for( ; n<config->_iterations; ++n )
   {
     int waitidx = n - config->_inflight;
   //    std::cout << "Waiting : " << waitidx << ":" << reqd->_names[ waitidx ] << std::endl;
-    while( dbrTest( reqd->_tags[ waitidx ] ) == DBR_ERR_INPROGRESS );
-    resd->_latency[ waitidx ] += dbr::myTime();
-
+    if(testcase != dbr::TEST_CASE_GETB) {
+    	while( dbrTest( reqd->_tags[ waitidx ] ) == DBR_ERR_INPROGRESS );
+    	resd->_latency[ waitidx ] += dbr::myTime();
+    }
     if(( validation_needed ) && ( strncmp( data, base_data, config->_datasize ) != 0 ))
       resd->_validation_failed = true;
     if( validation_needed )
       memset( data, 0, config->_datasize );
+    
 
 //    std::cout << "Creating: " << n << ":" << reqd->_names[n] << std::endl;
-    resd->_latency[n] = -dbr::myTime();
+    resd->_latency[n] =0;// -dbr::myTime();
     switch( testcase )
     {
       case dbr::TEST_CASE_PUT:
@@ -110,15 +112,17 @@ double benchmark( config *config,
         retsize[n % config->_inflight ] = config->_datasize;
         reqd->_tags[n] = dbrGetA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
         break;
+      case dbr::TEST_CASE_GETB:
+        retsize[n % config->_inflight ] = config->_datasize;
+        reqd->_tags[n] = dbrGet( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
+        resd->_latency[ n ] += dbr::myTime();
+	//std::cout << "Latency " <<  resd->_latency[ n ] << " for request  " << n << std::endl;
+        break;
       case dbr::TEST_CASE_READ:
+	//std::cout << "TEST_CASE_READ\n";
         retsize[n % config->_inflight ] = config->_datasize;
         reqd->_tags[n] = dbrReadA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
         break;
-  //    case dbr::TEST_CASE_PUTGET:
-//	reqd->_tags[n] = dbrPutA( h, data, config->_datasize, reqd->_names[n], DBR_GROUP_EMPTY );
-//	retsize[n % config->_inflight ] = config->_datasize;
-//        reqd->_tags[n] = dbrGetA( h, data, &retsize[n % config->_inflight ], reqd->_names[n], match, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
-//        break;
       default:
         std::cerr << "Undefined test case: " << testcase << std::endl;
         exit(1);
@@ -136,6 +140,7 @@ double benchmark( config *config,
   //  std::cout << "EndStamp: " << end << std::endl;
 
   // cooldown
+  if(testcase != dbr::TEST_CASE_GETB) {
   for( ; n<config->_iterations+config->_inflight; ++n )
   {
     int waitidx = n - config->_inflight;
@@ -146,7 +151,8 @@ double benchmark( config *config,
     if(( config->_validate ) && ( strncmp( data, base_data, config->_datasize ) != 0 ))
       resd->_validation_failed = true;
   }
-
+  } 
+//   std::cout << "Returning " << end-start << " for " << testcase << std::endl;
   return end-start;
 }
 

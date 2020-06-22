@@ -46,7 +46,8 @@ enum TEST_CASE
   TEST_CASE_GET = 0x2,
   TEST_CASE_READ = 0x4,
   TEST_CASE_PUTGET = 0x8,
-  TEST_CASE_MAX = 0x16
+  TEST_CASE_GETB = 0x10,
+  TEST_CASE_MAX = 0x20
 };
 
 static inline int
@@ -60,7 +61,7 @@ test_case_to_int( const char *test )
   if( strstr( test, "READ" ) != NULL )
     testcase += TEST_CASE_READ;
   if( strstr( test, "PUTGET" ) != NULL )
-    testcase += TEST_CASE_PUTGET;
+    testcase += TEST_CASE_PUTGET ;
   return testcase;
 }
 
@@ -119,7 +120,7 @@ ParseCommandline( int argc, char **argv,
   cfg->_variable_key = 0;
   cfg->_iterations = 10000;
   cfg->_inflight = 1;
-  cfg->_testcase = test_case_to_int("PUT,READ,GET");
+  cfg->_testcase = test_case_to_int("PUT,READ,GET,PUTGET");
   cfg->_timelimit = 0; // no time limit
   cfg->_memlimit = 0; // no memory limit
   cfg->_filldata = false; // no floodfill of data
