@@ -77,7 +77,7 @@ void PrintHeader( config *cfg, int argc, char **argv )
       << std::setw(12) << "[ms] " << std::endl;
 }
 
-static std::string case_str[5] = { "UNDEF", "PUT", "GET", "", "READ" }; // mind the gap
+static std::string case_str[9] = { "UNDEF", "PUT", "GET", "", "READ", "", "", "", "GETB" }; // mind the gap
 
 
 void PrintResultLine( config *cfg,
