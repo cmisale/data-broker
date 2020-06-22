@@ -3,7 +3,6 @@
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
-
 #include "timing.h"
 #include "commandline.h"
 #include "resultdata.h"
@@ -26,15 +25,12 @@ void PrintParallelResultLine( dbr::config *cfg,
         return;
     }
 
-    
     int pid = 0;
     int np = 0;
     MPI_Comm_size( comm, &np );
     MPI_Comm_rank( comm, &pid );
     
     int writers = np/2; // [0-n/2)  for put, [n/2,n) for get
-    
-    
     double total_req = writers * ( cfg->_iterations - cfg->_inflight - cfg->_inflight );
     double total_time = 0.0;
     double tmp_time = 0;
@@ -78,10 +74,6 @@ void PrintParallelResultLine( dbr::config *cfg,
     //    std::cout << " " << resd->_latency[ n ];
     }
     //  std::cout << "rank " << pid << " min max " << minlat << " " << maxlat << std::endl;
-
-    
-
-
     if (testcase == dbr::TEST_CASE_PUTGET) {
         // compute min latency
         if (pid >= writers) {
@@ -200,15 +192,11 @@ int main (int argc, char** argv) {
 
     double put_actual_time = 0.0;
     double getb_actual_time = 0.0;
-
     int writers = np/2;
     if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
     if (pid < writers) {
-
-        sleep(10);
        put_actual_time = dbr::benchmark(config, dbr::TEST_CASE_PUT, put_res, reqd, h, data );
     } else {
-
        getb_actual_time = dbr::benchmark(config, dbr::TEST_CASE_GETB, getb_res, reqd, h, data );
     }
   if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
