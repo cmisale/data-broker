@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <unistd.h>
 
 #include "timing.h"
 #include "commandline.h"
@@ -31,17 +32,17 @@ void PrintParallelResultLine( dbr::config *cfg,
     MPI_Comm_size( comm, &np );
     MPI_Comm_rank( comm, &pid );
     
-    int writers = np/2;
+    int writers = np/2; // [0-n/2)  for put, [n/2,n) for get
     
     
-    double total_req = np * ( cfg->_iterations - cfg->_inflight - cfg->_inflight );
+    double total_req = writers * ( cfg->_iterations - cfg->_inflight - cfg->_inflight );
     double total_time = 0.0;
-    if (testcase == dbr::TEST_CASE_PUTGET) {
+    double tmp_time = 0;
+    if (testcase == dbr::TEST_CASE_PUTGET) { // this is the get part
         if (pid >= writers) {
             MPI_Send( &actual_time, 1, MPI_DOUBLE, 0, 0, comm );
         }
         if (pid == 0) {
-            double tmp_time = 0;
             for (int i = writers; i < np; ++i) {
                 MPI_Recv(&tmp_time, 1, MPI_DOUBLE, i, 0, comm, MPI_STATUS_IGNORE);
                 total_time += tmp_time;
@@ -52,7 +53,7 @@ void PrintParallelResultLine( dbr::config *cfg,
             MPI_Send( &actual_time, 1, MPI_DOUBLE, 0, 0, comm );
         }
         if (pid == 0) {
-            double tmp_time = actual_time;
+            total_time = actual_time;
             for (int i = 1; i < writers; ++i) {
                 MPI_Recv(&tmp_time, 1, MPI_DOUBLE, i, 0, comm, MPI_STATUS_IGNORE);
                 total_time += tmp_time;
@@ -60,7 +61,7 @@ void PrintParallelResultLine( dbr::config *cfg,
         }
     }
     // MPI_Allreduce( &actual_time, &total_time, 1, MPI_DOUBLE, MPI_SUM, comm );
-    total_time = total_time/writers;
+    double total_time_avg = total_time/writers;
 
     double minlat = 100000000000.;
     double glob_min = 100000000000.;
@@ -87,7 +88,7 @@ void PrintParallelResultLine( dbr::config *cfg,
             MPI_Send( &minlat, 1, MPI_DOUBLE, 0, 0, comm );
         }
         if (pid == 0) {
-            double  tmp = 0.0;
+            double tmp = 100000000000;
             
             for (int i = writers; i < np; ++i) {
                 MPI_Recv(&tmp, 1, MPI_DOUBLE, i, 0, comm, MPI_STATUS_IGNORE);
@@ -137,15 +138,15 @@ void PrintParallelResultLine( dbr::config *cfg,
 
     if( pid == 0 )
     {
-        std::cout << std::setw(10) << cfg->_datasize
-            << std::setw(12) << total_time/1000.
-            << std::setw(12) << total_req
-            << std::setw(12) << (total_req)/(total_time/1000000.)
-            << std::setw(12) << (total_req*cfg->_datasize)/total_time
-            << std::setw(12) << (total_time*np/1000./total_req)
-            << std::setw(12) << glob_min/1000.
-            << std::setw(12) << glob_max/1000.
-            << std::setw(12) << dbr::case_str[ testcase ]
+        std::cout << std::setw(10) << cfg->_datasize                    // datasize
+            << std::setw(12) << total_time_avg/1000.                    // time [ms]
+            << std::setw(12) << total_req                               // # requests
+            << std::setw(12) << (total_req)/(total_time_avg/1000000.)   // IOPS
+            << std::setw(12) << (total_req*cfg->_datasize)/total_time   // BW [MB/s]
+            << std::setw(12) << ((total_time_avg/1000.))/total_req          // avg/req [ms]
+            << std::setw(12) << glob_min/1000.                          // min [ms]
+            << std::setw(12) << glob_max/1000.                          // max  [ms]
+            << std::setw(12) << dbr::case_str[ testcase ]               // testcase
             << std::endl;
     }
     MPI_Barrier( comm );
@@ -199,23 +200,15 @@ int main (int argc, char** argv) {
 
     double put_actual_time = 0.0;
     double getb_actual_time = 0.0;
-    bool first = true;
 
     int writers = np/2;
     if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
     if (pid < writers) {
-        if(first) {
-           std::cout << "I am pid " << pid << " performing PUT" << std::endl;
-           std::flush(std::cout);
-           first = false;
-        }
+
+        sleep(10);
        put_actual_time = dbr::benchmark(config, dbr::TEST_CASE_PUT, put_res, reqd, h, data );
     } else {
-        if(first) {
-           std::cout << "I am pid " << pid << " performing GET" << std::endl;
-           std::flush(std::cout);
-           first = false;
-        }
+
        getb_actual_time = dbr::benchmark(config, dbr::TEST_CASE_GETB, getb_res, reqd, h, data );
     }
   if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
