@@ -37,6 +37,8 @@ struct config
   bool _filldata;
   bool _validate;
   int _testcase;
+  bool _disk;
+  int _filedes;
 };
 
 enum TEST_CASE
@@ -78,7 +80,7 @@ int extraParse( const int opt, dbr::config *cfg )
       cfg->_testcase = test_case_to_int( optarg );
       if( cfg->_testcase == -1 )
       {
-        std::cerr << "Unknown test case (available: PUT, GET, READ, PUTGET (pipelining)" << std::endl;
+        std::cerr << "Unknown test case (available: PUT, GET, READ, PUTGET (pipelining))" << std::endl;
         exit(1);
       }
       break;
@@ -102,6 +104,7 @@ PrintHelp( const std::string SpecialOptions = "" )
       << "  -k <keysize>    set the size of the keys (8)" << std::endl
       << "  -K              variable keysize, will randomize the keylen [rnd%keylen+keylen] (off)" << std::endl
       << "  -n <iterations> number of iterations (10000)" << std::endl
+      << "  -f use to FS rather than DBR" << std::endl
       << SpecialOptions;
 }
 
@@ -125,6 +128,7 @@ ParseCommandline( int argc, char **argv,
   cfg->_memlimit = 0; // no memory limit
   cfg->_filldata = false; // no floodfill of data
   cfg->_validate = false; // no validation (slows down the operation)
+  cfg->_disk = false; // default use dbr
 
   int option;
   while(( option = getopt(argc, argv, options)) != -1 )
@@ -147,6 +151,9 @@ ParseCommandline( int argc, char **argv,
         break;
       case 'n': // iterations
         cfg->_iterations = std::strtol( optarg, NULL, 10 );
+        break;
+      case 'f':
+        cfg->_disk = true;
         break;
       default:
         // check if it's a special option

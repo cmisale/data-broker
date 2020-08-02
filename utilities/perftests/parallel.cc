@@ -46,7 +46,7 @@ void PrintParallelResultLine( dbr::config *cfg,
   int np = 0;
   MPI_Comm_size( comm, &np );
   MPI_Comm_rank( comm, &pid );
-  
+
   double total_req = np * ( cfg->_iterations - cfg->_inflight - cfg->_inflight );
   double total_time = 0.0;
   MPI_Allreduce( &actual_time, &total_time, 1, MPI_DOUBLE, MPI_SUM, comm );
@@ -102,7 +102,7 @@ int main( int argc, char **argv )
   -t <PUT|GET|READ>  comma separated list which command to test (PUT,READ,GET)\n\
 ";
 
-  dbr::config *config = dbr::ParseCommandline( argc, argv, "d:hk:Kn:p:t:", dbr::par_single_common::extraParse, extraHelp, true );
+  dbr::config *config = dbr::ParseCommandline( argc, argv, "d:hk:Kn:p:t:f", dbr::par_single_common::extraParse, extraHelp, true );
   if( config == NULL )
   {
     std::cerr << "Failed to create configuration." << std::endl;
@@ -115,11 +115,24 @@ int main( int argc, char **argv )
 
   dbr::resultdata *put_res = dbr::InitializeResult( config );
   dbr::resultdata *read_res = dbr::InitializeResult( config );
-  dbr::resultdata *get_res = dbr::InitializeResult( config );
+  // dbr::resultdata *get_res = dbr::InitializeResult( config );
 
   dbr::requestdata *reqd = dbr::InitializeRequest( config );
 
   char *data = dbr::generateLongMsg( config->_datasize );
+
+
+  char mpirank[3]; 
+  sprintf(mpirank, "%d", pid); 
+  char filename[10]; 
+  strcpy(filename, "worker-");
+  strcat(filename, mpirank);
+
+  config->_filedes=open(filename, O_RDWR | O_CREAT, S_IRUSR|S_IWUSR);   
+  if (config->_filedes == -1) {
+    std::cerr << "Failed to create file" << std::endl;
+  }
+
 
   if( config->_iterations * config->_keylen < MAX_TEST_MEMORY_USE )
   {
@@ -143,34 +156,10 @@ int main( int argc, char **argv )
     std::cerr << "Failed to create namespace" << std::endl;
     exit( -1 );
   }
-  double put_actual_time = 0.0;
-  double get_actual_time = 0.0;
-  bool first = true;
-// putget pipeline-like example
-  if( config->_testcase & dbr::TEST_CASE_PUTGET )
-  {
-    int writers = np/2;
-    if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
-    if (pid <= writers) {
-	if(first) {
-	   std::cout << "I am pid " << pid << " performing PUT" << std::endl;
-	   std::flush(std::cout); 
-	   first = false;	
-	}
-       put_actual_time = dbr::benchmark(config, dbr::TEST_CASE_PUT, put_res, reqd, h, data );
-    } else {
-	if(first) {
-           std::cout << "I am pid " << pid << " performing GET" << std::endl;
-           std::flush(std::cout);
-           first = false;
-        }
-       get_actual_time = dbr::benchmark(config, dbr::TEST_CASE_GET, get_res, reqd, h, data );
-    }
-  }
-  if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
- 
-	
+
+
   // populate backend with data
+  double put_actual_time = 0.0;
   if( config->_testcase & dbr::TEST_CASE_PUT )
   {
     if( pid == 0 ) { std::cout << "."; std::flush( std::cout ); }
@@ -198,23 +187,25 @@ int main( int argc, char **argv )
   MPI_Barrier(comm);
 
   // cleanup any generated data
-  //double get_actual_time = 0.0;
-  if( config->_testcase & dbr::TEST_CASE_GET )
-  {
-    std::cout << "."; std::flush( std::cout );
-    get_actual_time = dbr::benchmark(config, dbr::TEST_CASE_GET, get_res, reqd, h, data );
-    std::cout << "."; std::flush( std::cout );
-  }
-  else
-  {
-    std::cout << "."; std::flush( std::cout );
-    int64_t size;
-    for( size_t n=0; n<config->_iterations; ++n )
-    {
-      size = config->_datasize;
-      dbrGet( h, data, &size, reqd->_names[n], NULL, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
-    }
-  }
+   //double get_actual_time = 0.0;
+  // if( config->_testcase & dbr::TEST_CASE_GET )
+  // {
+  //   std::cout << "."; std::flush( std::cout );
+  //   get_actual_time = dbr::benchmark(config, dbr::TEST_CASE_GET, get_res, reqd, h, data );
+  //   std::cout << "."; std::flush( std::cout );
+  // }
+  // else
+  // {
+  //   std::cout << "."; std::flush( std::cout );
+  //   int64_t size;
+  //   for( size_t n=0; n<config->_iterations; ++n )
+  //   {
+  //     size = config->_datasize;
+  //     dbrGet( h, data, &size, reqd->_names[n], NULL, DBR_GROUP_EMPTY, DBR_FLAGS_NONE );
+  //   }
+  // }
+
+
   if( pid == 0 )
   {
     MPI_Barrier(comm);
@@ -227,13 +218,16 @@ int main( int argc, char **argv )
   }
   if( pid == 0 ) std::cout << "Done." << std::endl;
 
+  if (close(config->_filedes) == -1) {
+    std::cerr << "Failed to close file." << std::endl;
+  } 
 
   if( pid == 0 )
     dbr::PrintHeader( config, argc, argv );
 
   PrintParallelResultLine( config, dbr::TEST_CASE_PUT, put_res, put_actual_time, comm );
   PrintParallelResultLine( config, dbr::TEST_CASE_READ, read_res, read_actual_time, comm );
-  PrintParallelResultLine( config, dbr::TEST_CASE_GET, get_res, get_actual_time, comm );
+  // PrintParallelResultLine( config, dbr::TEST_CASE_GET, get_res, get_actual_time, comm );
 
   dbr::DestroyRequest( reqd );
   delete config;
