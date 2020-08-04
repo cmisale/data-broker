@@ -122,9 +122,9 @@ int main( int argc, char **argv )
   char *data = dbr::generateLongMsg( config->_datasize );
 
 
-  char mpirank[3]; 
-  sprintf(mpirank, "%d", pid); 
-  char filename[10]; 
+  char mpirank[3];
+  sprintf(mpirank, "%d", pid);
+  char filename[10];
   strcpy(filename, "worker-");
   strcat(filename, mpirank);
 

@@ -113,7 +113,7 @@ double benchmark( config *config,
       if(config->_disk) {
           //std::cout << "writing " << data <<std::endl;
           std::flush(std::cout);
-          write(config->_filedes, data, config->_datasize);  
+          write(config->_filedes, data, config->_datasize);
           write(config->_filedes, "\n", sizeof("\n"));
           resd->_latency[ n ] += dbr::myTime();
           break;
@@ -132,7 +132,7 @@ double benchmark( config *config,
         break;
       case dbr::TEST_CASE_READ:
         if(config->_disk) {
-          read(config->_filedes, data, n*(size_t)retsize[n % config->_inflight ]); 
+          read(config->_filedes, data, n*(size_t)retsize[n % config->_inflight ]);
           //std::cout << "read " << data << std::endl;
           resd->_latency[ n ] += dbr::myTime();
           // n = config->_iterations;
